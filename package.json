@@ -1,0 +1,28 @@
+{
+  "name": "nodesqliteproject",
+  "version": "1.0.0",
+  "description": "a fullstack todo application that uses a nodejs backend and sqlite database and JWT for authentication",
+  "main": "index.js",
+  
+  "scripts": {
+    "dev": "node --watch --env-file=.env --experimental-strip-types --experimental-sqlite ./src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kelvinkuriam/nodesqliteproject.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/kelvinkuriam/nodesqliteproject/issues"
+  },
+  "homepage": "https://github.com/kelvinkuriam/nodesqliteproject#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
