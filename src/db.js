@@ -1,70 +1,29 @@
-// Import DatabaseSync from Node's built-in sqlite module
-// DatabaseSync allows you to use SQLite synchronously (blocking)
-// This means queries run one at a time (simpler for beginners)
 import { DatabaseSync } from 'node:sqlite';
 
+// ✅ Use file DB (NOT memory)
+const db = new DatabaseSync('database.db');
 
-// Create a new SQLite database
-// ':memory:' means the database is stored in RAM (temporary)
-// This database will RESET every time you restart the server
-//
-// If you want persistent DB use:
-// new DatabaseSync('database.db')
-const db = new DatabaseSync(':memory:');
+// ✅ VERY IMPORTANT: enable foreign keys
+db.exec(`PRAGMA foreign_keys = ON;`);
 
-
-
-// ==============================
-// CREATE USERS TABLE
-// ==============================
-
-// db.exec() executes raw SQL queries
-// This SQL creates a table called "users"
-// Create users table
+// Users table
 db.exec(`
--- This table stores registered users
-CREATE TABLE users(
-
-    -- Unique ID for each user
+  CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    -- Username must be unique and not null
-    username TEXT NOT NULL UNIQUE,
-
-    -- Password cannot be null
-    password TEXT NOT NULL
-
-)
+    username TEXT UNIQUE,
+    password TEXT
+  )
 `);
 
-
-
-
-// Create todos table
+// Todos table
 db.exec(`
-
-    -- This table stores todos for each user
-    CREATE TABLE todos(
-
-    -- Unique todo ID
+  CREATE TABLE IF NOT EXISTS todos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    -- This links todo to a user
-    user_id INTEGER NOT NULL,
-
-    -- The todo task text
+    user_id INTEGER,
     task TEXT,
-
-    -- 0 = false, 1 = true
-    -- Default = not completed
-    completed BOOLEAN NOT NULL DEFAULT 0,
-
-    -- Foreign key relationship
-    -- user_id must exist in users table
-    FOREIGN KEY (user_id) REFERENCES users(id)
-
-)
-    
+    completed BOOLEAN DEFAULT 0,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  )
 `);
 
 export default db;

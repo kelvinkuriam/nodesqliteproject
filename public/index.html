@@ -1,322 +1,342 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo App | Node.JS Express.JS SQLite</title>
+    <title>Todo App</title>
+
     <link rel="stylesheet" href="/styles.css" />
     <link rel="stylesheet" href="/fanta.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 
 <body>
-    <section id="auth">
-        <div>
-            <h2 className="sign-up-text">Login</h2>
-            <p>Create an account!</p>
-        </div>
 
-        <p id="error" style="display: none;"></p>
-        <input id="emailInput" placeholder="Email" />
-        <input id="passwordInput" placeholder="********" type="password" />
-        <button id="authBtn" onclick="authenticate()">
-            Submit
-        </button>
-        <hr />
-        <div class="register-content">
-            <p>Don&apos;t have an account?</p>
-            <button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
-        </div>
-    </section>
-    <header style="display: none;">
-        <h1 class="text-gradient">You have 0 open tasks.</h1>
-    </header>
-    <nav style="display: none;" class="tab-container">
-        <button onclick="changeTab('All')" class="tab-button  selected-tab">
-            <h4>All <span>(0)</span></h4>
-        </button>
-        <button onclick="changeTab('Open')" class="tab-button  ">
-            <h4>Open <span>(0)</span></h4>
-        </button>
-        <button onclick="changeTab('Complete')" class="tab-button  ">
-            <h4>Complete <span>(0)</span></h4>
-        </button>
-        <hr />
-    </nav>
-    <main style="display: none;">
+<!-- AUTH -->
+<section id="auth">
+    <div>
+        <h2>Login</h2>
+        <p>Create an account!</p>
+    </div>
 
+    <p id="error" style="display:none;"></p>
 
-    </main>
-</body>
+    <input id="emailInput" placeholder="Email" />
+    <input id="passwordInput" type="password" placeholder="********" />
+
+    <button id="authBtn" onclick="authenticate()">Submit</button>
+
+    <hr />
+
+    <div class="register-content">
+        <p>Don’t have an account?</p>
+        <button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
+    </div>
+</section>
+
+<!-- HEADER -->
+<header style="display:none; justify-content: space-between; align-items:center;">
+    <h1 class="text-gradient">You have 0 open tasks.</h1>
+    <button onclick="logout()">Logout</button>
+</header>
+
+<!-- NAV -->
+<nav style="display:none;" class="tab-container">
+    <button onclick="changeTab('All')" class="tab-button selected-tab">
+        <h4>All <span>(0)</span></h4>
+    </button>
+    <button onclick="changeTab('Open')" class="tab-button">
+        <h4>Open <span>(0)</span></h4>
+    </button>
+    <button onclick="changeTab('Complete')" class="tab-button">
+        <h4>Complete <span>(0)</span></h4>
+    </button>
+    <hr />
+</nav>
+
+<!-- MAIN -->
+<main style="display:none;"></main>
+
 <script>
-    let token = localStorage.getItem('token')
+let token = localStorage.getItem('token');
 
-    let isLoading = false
-    let isAuthenticating = false
-    let isRegistration = false
-    let selectedTab = 'All'
-    let todos = []
+let isRegistration = false;
+let selectedTab = 'All';
+let todos = [];
 
-    const apiBase = '/'
+const apiBase = '/';
 
-    // elements
-    const nav = document.querySelector('nav')
-    const header = document.querySelector('header')
-    const main = document.querySelector('main')
-    const navElements = document.querySelectorAll('.tab-button')
-    const authContent = document.getElementById('auth')
-    const textError = document.getElementById('error')
-    const email = document.getElementById('emailInput')
-    const password = document.getElementById('passwordInput')
-    const registerBtn = document.getElementById('registerBtn')
-    const authBtn = document.getElementById('authBtn')
-    const addTodoBtn = document.getElementById('addTodoBtn')
-    // const deleteBtn = document.getElementById('')
-    // const updateBtn = 
+// elements
+const nav = document.querySelector('nav');
+const header = document.querySelector('header');
+const main = document.querySelector('main');
+const navElements = document.querySelectorAll('.tab-button');
+const authContent = document.getElementById('auth');
+const textError = document.getElementById('error');
+const email = document.getElementById('emailInput');
+const password = document.getElementById('passwordInput');
+const registerBtn = document.getElementById('registerBtn');
+const authBtn = document.getElementById('authBtn');
 
-    // PAGE RENDERING LOGIC
-    async function showDashboard() {
-        nav.style.display = 'block'
-        header.style.display = 'flex'
-        main.style.display = 'flex'
-        authContent.style.display = 'none'
 
-        await fetchTodos()
+// ================= AUTH =================
+
+function toggleIsRegister() {
+    isRegistration = !isRegistration;
+
+    registerBtn.innerText = isRegistration ? 'Sign in' : 'Sign up';
+    document.querySelector('#auth h2').innerText = isRegistration ? 'Sign Up' : 'Login';
+    document.querySelector('.register-content p').innerText =
+        isRegistration ? 'Already have an account?' : 'Don’t have an account?';
+}
+
+async function authenticate() {
+    const emailVal = email.value;
+    const passVal = password.value;
+
+    if (!emailVal || !passVal) return;
+
+    textError.style.display = 'none';
+    authBtn.innerText = 'Authenticating...';
+
+    try {
+        const endpoint = isRegistration ? 'auth/register' : 'auth/login';
+
+        const response = await fetch(apiBase + endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: emailVal, password: passVal })
+        });
+
+        const data = await response.json();
+
+        if (!data.token) throw new Error(data.message || 'Authentication failed');
+
+        token = data.token;
+        localStorage.setItem('token', token);
+
+        await fetchTodos();
+        showDashboard();
+
+    } catch (err) {
+        textError.innerText = err.message;
+        textError.style.display = 'block';
+    } finally {
+        authBtn.innerText = 'Submit';
     }
+}
 
-    function updateHeaderText() {
-        const todosLength = todos.length
-        const newString = todos.length === 1 ?
-            `You have 1 open task.` :
-            `You have ${todosLength} open tasks.`
-        header.querySelector('h1').innerText = newString
-    }
 
-    function updateNavCount() {
-        navElements.forEach(ele => {
-            const btnText = ele.innerText.split(' ')[0]
+// ================= LOGOUT =================
 
-            // filter todos in here
-            const count = todos.filter(val => {
-                if (btnText === 'All') {
-                    return true
-                }
-                return btnText === 'Complete' ?
-                    val.completed :
-                    !val.completed
-            }).length
+function logout() {
+    localStorage.removeItem('token');
+    token = null;
 
-            // target inside space and update value
-            ele.querySelector('span').innerText = `(${count})`
-        })
-    }
+    todos = [];
+    selectedTab = 'All';
 
-    function changeTab(tab) {
-        selectedTab = tab
-        navElements.forEach(val => {
-            if (val.innerText.includes(tab)) {
-                val.classList.add('selected-tab')
-            } else {
-                val.classList.remove('selected-tab')
-            }
-        })
-        renderTodos()
-    }
+    nav.style.display = 'none';
+    header.style.display = 'none';
+    main.style.display = 'none';
 
-    function renderTodos() {
-        // need to add filtering logic in here
+    authContent.style.display = 'flex';
 
-        updateNavCount()
-        updateHeaderText()
+    email.value = '';
+    password.value = '';
+}
 
-        let todoList = ``
-        todos.filter(val => {
-            return selectedTab === 'All' ? true : selectedTab === 'Complete' ? val.completed : !val.completed
-        }).forEach((todo, todoIndex) => {
-            const taskIndex = todo.id
-            todoList += `
+
+// ================= DASHBOARD =================
+
+function showDashboard() {
+    nav.style.display = 'block';
+    header.style.display = 'flex';
+    main.style.display = 'flex';
+    authContent.style.display = 'none';
+
+    renderTodos();
+}
+
+function updateHeaderText() {
+    const open = todos.filter(t => !t.completed).length;
+    header.querySelector('h1').innerText =
+        open === 1 ? 'You have 1 open task.' : `You have ${open} open tasks.`;
+}
+
+function updateNavCount() {
+    navElements.forEach(btn => {
+        const type = btn.innerText.split(' ')[0];
+
+        const count = todos.filter(t => {
+            if (type === 'All') return true;
+            if (type === 'Complete') return t.completed;
+            return !t.completed;
+        }).length;
+
+        btn.querySelector('span').innerText = `(${count})`;
+    });
+}
+
+function changeTab(tab) {
+    selectedTab = tab;
+
+    navElements.forEach(btn => {
+        btn.classList.toggle('selected-tab', btn.innerText.includes(tab));
+    });
+
+    renderTodos();
+}
+
+function renderTodos() {
+    updateHeaderText();
+    updateNavCount();
+
+    let html = '';
+
+    todos
+        .filter(t => selectedTab === 'All'
+            ? true
+            : selectedTab === 'Complete'
+                ? t.completed
+                : !t.completed)
+        .forEach(todo => {
+
+            const safeTask = todo.task.replace(/'/g, "\\'");
+
+            html += `
             <div class="card todo-item">
                 <p>${todo.task}</p>
                 <div class="todo-buttons">
-                    <button onclick="updateTodo(${taskIndex})" ${todo.completed ? 'disabled' : ''}>
-                        <h6>Done</h6>
+
+                    <button onclick="markDone(${todo.id})" ${todo.completed ? 'disabled' : ''}>
+                        Done
                     </button>
-                    <button onclick="deleteTodo(${taskIndex})">
-                        <h6>Delete</h6>
+
+                    <button onclick="editTodo(${todo.id}, '${safeTask}')">
+                        Edit
                     </button>
+
+                    <button onclick="deleteTodo(${todo.id})">
+                        Delete
+                    </button>
+
                 </div>
             </div>
-            `
+            `;
+        });
+
+    html += `
+    <div class="input-container">
+        <input id="todoInput" placeholder="Add task" />
+        <button onclick="addTodo()">+</button>
+    </div>
+    `;
+
+    main.innerHTML = html;
+}
+
+
+// ================= TODOS =================
+
+async function fetchTodos() {
+    const response = await fetch(apiBase + 'todos', {
+        headers: { 'Authorization': token }
+    });
+
+    if (response.status === 401) {
+        logout();
+        return;
+    }
+
+    todos = await response.json();
+}
+
+async function addTodo() {
+    const input = document.getElementById('todoInput');
+    if (!input.value) return;
+
+    await fetch(apiBase + 'todos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+        },
+        body: JSON.stringify({ task: input.value })
+    });
+
+    input.value = '';
+    fetchTodos().then(renderTodos);
+}
+
+
+// ✅ EDIT FLOW
+
+function editTodo(id, currentTask) {
+    const newTask = prompt("Edit your task:", currentTask);
+
+    if (!newTask || newTask === currentTask) return;
+
+    updateTodoText(id, newTask);
+}
+
+async function updateTodoText(id, newTask) {
+    const todo = todos.find(t => t.id === id);
+
+    await fetch(apiBase + 'todos/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+        },
+        body: JSON.stringify({
+            task: newTask,
+            completed: todo.completed
         })
-        todoList += `
-        <div class="input-container">
-            <input id="todoInput" placeholder="Add task" />
-            <button onclick="addTodo()">
-                <i class="fa-solid fa-plus"></i>
-            </button>
-        </div>
-        `
-        main.innerHTML = todoList
-    }
+    });
 
-    // showDashboard()
-
-    // AUTH LOGIC
-
-    async function toggleIsRegister() {
-        isRegistration = !isRegistration
-        registerBtn.innerText = isRegistration ? 'Sign in' : 'Sign up'
-        document.querySelector('#auth > div h2').innerText = isRegistration ? 'Sign Up' : 'Login'
-        document.querySelector('.register-content p').innerText = isRegistration ? 'Already have an account?' : 'Don\'t have an account?'
-        document.querySelector('.register-content button').innerText = isRegistration ? 'Sign in' : 'Sign up'
-    }
-
-    async function authenticate() {
-        // access email and pass values
-        const emailVal = email.value
-        const passVal = password.value
-
-        // guard clauses... if authenticating, return
-        if (
-            isLoading ||
-            isAuthenticating ||
-            !emailVal ||
-            !passVal ||
-            passVal.length < 6 ||
-            !emailVal.includes('@')
-        ) { return }
-
-        // reset error and set isAuthenticating to true
-        error.style.display = 'none'
-        isAuthenticating = true
-        authBtn.innerText = 'Authenticating...'
-
-        try {
-            let data
-            if (isRegistration) {
-                // register an account
-                const response = await fetch(apiBase + 'auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: emailVal, password: passVal })
-                })
-                data = await response.json()
-            } else {
-                // login an account
-                const response = await fetch(apiBase + 'auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: emailVal, password: passVal })
-                })
-                data = await response.json()
-            }
-
-            if (data.token) {
-                token = data.token
-                localStorage.setItem('token', token)
-
-                // authenicating into loading
-                authBtn.innerText = 'Loading...'
-
-                // fetch todos
-                await fetchTodos()
-
-                // show dashboard
-                showDashboard()
-            } else {
-                throw Error('❌ Failed to authenticate...')
-            }
-
-        } catch (err) {
-            console.log(err.message)
-            error.innerText = err.message
-            error.style.display = 'block'
-        } finally {
-            authBtn.innerText = 'Submit'
-            isAuthenticating = false
-        }
+    fetchTodos().then(renderTodos);
+}
 
 
-    }
+// ✅ MARK DONE
 
-    function logout() {
-        // wipe states and clear cached token
-    }
+async function markDone(id) {
+    const todo = todos.find(t => t.id === id);
 
-    // CRUD LOGIC
-
-    async function fetchTodos() {
-        isLoading = true
-        const response = await fetch(apiBase + 'todos', {
-            headers: { 'Authorization': token }
+    await fetch(apiBase + 'todos/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+        },
+        body: JSON.stringify({
+            task: todo.task,
+            completed: 1
         })
-        const todosData = await response.json()
-        todos = todosData
-        isLoading = false
-        renderTodos()
-    }
+    });
 
-    async function updateTodo(index) {
-        // set task complete status to true
-        await fetch(apiBase + 'todos' + '/' + index, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token
-            },
-            body: JSON.stringify({ task: todos.find(val => val.id === index).task, completed: 1 })
-        })
-        fetchTodos()
-    }
-
-    async function deleteTodo(index) {
-        // set task complete status to true
-        await fetch(apiBase + 'todos' + '/' + index, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': token
-            },
-        })
-        fetchTodos()
-    }
-
-    async function addTodo() {
-        // have to access this val later as it's rendered with js
-        const todoInput = document.getElementById('todoInput')
-        const task = todoInput.value
-
-        if (!task) { return }
-
-        await fetch(apiBase + 'todos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token
-            },
-            body: JSON.stringify({ task })
-        })
-        todoInput.value = ''
-        fetchTodos()
-    }
-
-    // UTILITY FUNCTIONS
+    fetchTodos().then(renderTodos);
+}
 
 
-    // load page and read local storage for key
+// ✅ DELETE
 
-    // default to login screen
+async function deleteTodo(id) {
+    await fetch(apiBase + 'todos/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': token }
+    });
 
-    // if is authenticated, show todo app
-    if (token) {
-        async function run() {
-            await fetchTodos()
-            showDashboard()
-        }
-        run()
-    }
+    fetchTodos().then(renderTodos);
+}
+
+
+// ================= INIT =================
+
+if (token) {
+    fetchTodos().then(showDashboard);
+}
 </script>
 
+</body>
 </html>

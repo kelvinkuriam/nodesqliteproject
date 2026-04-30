@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "a fullstack todo application that uses a nodejs backend and sqlite database and JWT for authentication",
   "main": "index.js",
+  "start": "node src/server.js",
   
   "scripts": {
     "dev": "node --watch --env-file=.env --experimental-strip-types --experimental-sqlite ./src/server.js",

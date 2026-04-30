@@ -34,3 +34,15 @@ Authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzc3MzkxM
 ##CREATES NEW TODOS
 POST http://localhost:5003/todos
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzc3MzkxMTExLCJleHAiOjE3Nzc0Nzc1MTF9.1Zf64d7vbTku0gY5qgdZ5swzH1vx09G2MjleS2Sb-wk 
+
+{}
+
+### update a todo
+PUT http://localhost:5000/todos/1
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzc3MzkxMTExLCJleHAiOjE3Nzc0Nzc1MTF9.1Zf64d7vbTku0gY5qgdZ5swzH1vx09G2MjleS2Sb-wk
+Content-Type: application/json
+
+{
+    "completed":1
+    
+}
