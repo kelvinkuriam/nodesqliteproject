@@ -25,8 +25,8 @@ insertToDo.run(result.lastInsertRowid,defaultToDo);
 
 const token = jwt.sign({id: result.lastInsertRowid},process.env.JWT_SECRET,{expiresIn:'24h'});
 res.json({token});
-}catch{
-    console.log(err.message);
+}catch(error){
+    console.log(error.message);
     res.sendStatus(503);
 }
 
@@ -39,6 +39,14 @@ try {
     if(!user){
         return res.status(404).send({message:'User not found'});
     }
+    const passwordIsValid = bcrypt.compareSync(password,user.password)
+    if( !passwordIsValid){return res.status(401).send({message:"Invalid password"})}
+
+    console.log(user)
+
+
+ const token = jwt.sign({id:user.id},process.env.JWT_SECRET,{expiresIn:'24h'})
+ res.json({token})
 } catch (error) {
     console.log(error.message);
     res.sendStatus(503);

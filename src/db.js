@@ -29,10 +29,10 @@ CREATE TABLE users(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     -- Username must be unique and not null
-    USERNAME TEXT NOT NULL UNIQUE,
+    username TEXT NOT NULL UNIQUE,
 
     -- Password cannot be null
-    PASSWORD TEXT NOT NULL
+    password TEXT NOT NULL
 
 )
 `);
